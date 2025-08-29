@@ -1,0 +1,7 @@
+---
+# vars file for postgres
+pg13_repo_url: 'https://download.postgresql.org/pub/repos/yum/13/redhat/rhel-$releasever-$basearch'
+pg12_repo_url: 'https://download.postgresql.org/pub/repos/yum/12/redhat/rhel-$releasever-$basearch'
+pg11_repo_url: 'https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-$releasever-$basearch'
+pg10_repo_url: 'https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-$releasever-$basearch'
+pg96_repo_url: 'https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-$releasever-$basearch'

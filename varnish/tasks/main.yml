@@ -1,0 +1,11 @@
+---
+# tasks file for redis
+- name: install varnish
+  yum: 
+    name: varnish
+    state: present
+- name: enable and restart varnish
+  service:
+    name: varnish
+    enabled: yes
+    state: restarted

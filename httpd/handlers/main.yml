@@ -1,0 +1,8 @@
+---
+# handlers file for httpd
+- name: restart httpd
+  service: name=httpd.service state=restarted
+- name: start httpd
+  service: name=httpd.service state=started
+- name: enable httpd
+  service: name=httpd.service enabled=yes
