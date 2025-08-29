@@ -1,0 +1,8 @@
+geerlingguy.php
+lae.proxmox
+user-ripper
+user-root
+zabbix-agent/files/zabbix_agent.psk
+zabbix-agent/templates/zabbix_agent2.conf.j2
+vsftpd
+elasticsearch
