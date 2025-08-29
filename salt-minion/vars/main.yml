@@ -1,3 +1,0 @@
----
-# vars file for salt-minion
-mastervar: "master: spiak.sk"
