@@ -1,0 +1,9 @@
+---
+# handlers file for nginx
+- name: restart nginx
+  service: name=nginx.service state=restarted
+- name: start nginx
+  service: name=nginx.service state=started
+- name: enable mariadb
+  service: name=nginx.service state=enabled
+

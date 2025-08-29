@@ -1,0 +1,57 @@
+---
+# tasks file for mariadb
+- name: set release facts rhel7
+  set_fact:
+    repo_url="{{ rhel7_repo_url }}"
+  when:
+  - ansible_facts['distribution'] == "OracleLinux"
+  - ansible_facts['distribution_major_version'] == "7"
+- name: set release facts rhel8
+  set_fact:
+    repo_url="{{ rhel8_repo_url }}"
+  when:
+  - ansible_facts['distribution'] == "RedHat"
+  - ansible_facts['distribution_major_version'] == "8"
+- name: set release facts cent7
+  set_fact:
+    repo_url="{{ cent7_repo_url }}"
+  when:
+  - ansible_facts['distribution'] == "CentOS"
+  - ansible_facts['distribution_major_version'] == "7"
+- name: set release facts cent8
+  set_fact:
+    repo_url="{{ cent8_repo_url }}"
+  when:
+  - ansible_facts['distribution'] == "CentOS"
+  - ansible_facts['distribution_major_version'] == "8"
+- name: push mariadb repo template
+  template:
+    src: mariadb.repo.j2
+    dest: /etc/yum.repos.d/mariadb.repo
+- name: install mariadb server
+  yum:
+    name: MariaDB-server-10.3*
+    state: present
+    update_cache: yes
+  notify: enable mariadb
+- name: create /storage/mariadb directory
+  file:
+    path: /storage/mariadb
+    state: directory
+    mode: u+rwx,o-rwx,g-rwx
+    owner: mysql
+    group: mysql
+- name: push /etc/my.cnf template
+  template:
+    src: my.cnf.j2
+    dest: /etc/my.cnf
+- name: move DB data to new datadir
+  shell: mv -f /var/lib/mysql/* /storage/mariadb/
+- name: enable mariadb service
+  service:
+    name: mysql
+    enabled: yes
+- name: start mariadb service
+  service:
+    name: mysql
+    state: started

@@ -1,0 +1,50 @@
+- name: request apt update
+  ansible.builtin.apt:
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+- name: install generic packages
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - net-tools
+    - cifs-utils
+    - tmux
+    - screen
+    - psmisc
+    - strace
+    - telnet
+    - ncat
+    - socat
+    - tcpdump
+    - lsof
+    - curl
+    - wget
+    - rsyslog
+    - xauth
+    - sudo
+    - openssl
+    - rsync
+    - iotop
+    - mlocate
+- name: install packages for Debian
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - dnsutils
+    - netcat-traditional
+    - htop
+    - bash-completion
+    - nload
+    - nfs-common
+  when: ansible_os_family == "Debian"
+- name: install packages for RHEL
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - bind-utils
+    - nmap-ncat
+    - nfs-utils
+  when: ansible_os_family == "RedHat"

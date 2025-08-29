@@ -1,0 +1,10 @@
+---
+- name: install haproxy
+  yum: 
+    name: haproxy
+    state: present
+- name: enable and restart haproxy service
+  service:
+    name: haproxy
+    enabled: yes
+    state: restarted

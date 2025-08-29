@@ -1,0 +1,62 @@
+---
+# tasks file for postgres
+- name: set version to install
+  set_fact:
+    repo_url="{{ item.url }}"
+  when: pg_vers == item.vers
+  loop:
+  - { vers: '13', url: "{{pg13_repo_url}}" }
+  - { vers: '12', url: "{{pg12_repo_url}}" }
+  - { vers: '11', url: "{{pg11_repo_url}}" }
+  - { vers: '10', url: "{{pg10_repo_url}}" }
+  - { vers: '9.6', url: "{{pg96_repo_url}}" }
+- name: push postgres repo template
+  template:
+    src: pgdg.repo.j2
+    dest: /etc/yum.repos.d/pgdg.repo
+- name: push RPM-GPG-KEY-PGDG key
+  copy:
+    src: RPM-GPG-KEY-PGDG
+    dest: /etc/pki/rpm-gpg/RPM-GPG-KEY-PGDG
+    owner: root
+    group: root
+    mode: u+rw,g+r,o+r
+- name: yum update cache
+  shell: yum clean all && yum makecache
+- name: install postgresql-server
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+  - postgresql{{ pg_vers }}-server*
+  - postgresql{{ pg_vers }}-contrib*
+- name: create /storage/pgdata directory
+  file:
+    path: /storage/pgdata
+    state: directory
+    mode: u+rwx,o-rwx,g-rwx
+    owner: postgres
+    group: postgres
+- name: create /etc/systemd/system/postgresql-{{ pg_vers }}.service.d/ directory
+  file:
+    path: /etc/systemd/system/postgresql-{{ pg_vers }}.service.d
+    state: directory
+    mode: u+rwx,o+rx,g+rx
+    owner: root
+    group: root
+- name: push PgData override systemd file
+  copy:
+    src: override.conf
+    dest: /etc/systemd/system/postgresql-{{ pg_vers }}.service.d/override.conf
+- name: reload systemd daemon conf
+  shell: systemctl daemon-reload
+- name: initialize data dir
+  shell: /usr/pgsql-{{ pg_vers }}/bin/postgresql-{{ pg_vers }}-setup initdb
+- name: enable postgres service
+  service:
+    name: postgresql-{{ pg_vers }}
+    enabled: yes
+- name: start postgres service
+  service:
+    name: postgresql-{{ pg_vers }}
+    state: started

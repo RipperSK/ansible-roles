@@ -1,0 +1,35 @@
+---
+# tasks file for nginx
+- name: RHEL block
+  block:
+    - name: push nginx repo file for RHEL
+      template:
+        src:  nginx.repo.j2
+        dest: /etc/yum.repos.d/nginx.repo
+    - name: install nginx RHEL
+      yum:
+        name: nginx
+        update_cache: yes
+        state: latest
+  when: ansible_os_family == "RedHat"
+- name: Deb block
+  block:
+    - name: push nginx repo file for Deb
+      template:
+        src:  nginx.list.j2
+        dest: /etc/apt/sources.list.d/nginx.list
+    - name: install nginx gpg
+      get_url:
+        url: https://nginx.org/keys/nginx_signing.key
+        dest: /etc/apt/trusted.gpg.d/nginx_signing.asc
+    - name: install nginx Deb
+      apt:
+        name: nginx
+        update_cache: yes
+        state: latest
+  when: ansible_os_family == "Debian"
+- name: enable and restart nginx
+  service:
+    name: nginx
+    enabled: yes
+    state: restarted

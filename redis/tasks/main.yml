@@ -1,0 +1,11 @@
+---
+# tasks file for redis
+- name: install redis
+  shell: 
+    cmd: yum install -y redis --enablerepo=remi
+    warn: false
+- name: enable and restart redis
+  service:
+    name: redis
+    enabled: yes
+    state: restarted

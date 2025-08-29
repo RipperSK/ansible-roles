@@ -1,0 +1,4 @@
+---
+# vars file for zabbix-agent
+pkg_name: zabbix-agent2
+user: ripper

@@ -1,0 +1,17 @@
+#
+# This group is read both by the client and the server
+# use it for options that affect everything
+#
+[mysqld]
+datadir=/storage/mariadb
+bind-address=0.0.0.0
+
+[mysqld_safe]
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+
+[client-server]
+
+# include *.cnf from the config directory
+#
+!includedir /etc/my.cnf.d
