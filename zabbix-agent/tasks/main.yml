@@ -6,12 +6,12 @@
 - name: Install zabbix release repo for DEBIAN12
   apt:
     deb: "https://repo.zabbix.com/zabbix/7.0/debian/pool/main/z/zabbix-release/zabbix-release_latest%2Bdebian12_all.deb"
-  when: ansible_distribution_major_version = "12"
+  when: ansible_distribution_major_version == "12"
 
 - name: Install zabbix release repo for DEBIAN13
   apt:
     deb: "https://repo.zabbix.com/zabbix/7.0/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.0%2Bdebian13_all.deb"
-  when: ansible_distribution_major_version = "13"
+  when: ansible_distribution_major_version == "13"
 
 - name: Install zabbix-agent package
   apt:
