@@ -6,3 +6,4 @@ zabbix-agent/files/zabbix_agent.psk
 zabbix-agent/templates/zabbix_agent2.conf.j2
 vsftpd
 elasticsearch
+ansible-role-docker
