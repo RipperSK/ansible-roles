@@ -1,11 +1,17 @@
 - name: Fail if task is run on non-Debian12 system
   ansible.builtin.fail:
-    msg: The supported OS for this role is Debian12 only
-  when: ansible_os_family != "Debian" or ansible_distribution_major_version != "12"
+    msg: The supported OS for this role is Debian12 and Debian13 only
+  when: ansible_os_family != "Debian" or ansible_distribution_major_version < "12" or ansible_distribution_major_version > "13"
 
-- name: Install zabbix release repo for DEBIAN family
+- name: Install zabbix release repo for DEBIAN12
   apt:
     deb: "https://repo.zabbix.com/zabbix/7.0/debian/pool/main/z/zabbix-release/zabbix-release_latest%2Bdebian12_all.deb"
+  when: ansible_distribution_major_version = "12"
+
+- name: Install zabbix release repo for DEBIAN13
+  apt:
+    deb: "https://repo.zabbix.com/zabbix/7.0/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.0%2Bdebian13_all.deb"
+  when: ansible_distribution_major_version = "13"
 
 - name: Install zabbix-agent package
   apt:
@@ -35,19 +41,6 @@
   service:
     name: "{{ pkg_name }}"
     state: restarted
-
-
-    #- name: Create a new host or update an existing host's info
-    #  vars:
-    #    ansible_network_os: community.zabbix.zabbix
-    #    ansible_connection: httpapi
-    #    ansible_httpapi_port: 443
-    #    ansible_httpapi_use_ssl: true
-    #    ansible_httpapi_validate_certs: false
-    #    ansible_host: zabbix.spiak.sk
-    #  become: false
-    #  community.zabbix.zabbix_host:
-    #
 
 - name: Update zabbix host via API
   vars:
