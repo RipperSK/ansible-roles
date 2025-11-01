@@ -1,0 +1,60 @@
+---
+- name: Fail if task is run on non-Debian system
+  ansible.builtin.fail:
+    msg: The supported OS for this role is Debian Linux only
+  when: ansible_os_family != "Debian"
+
+- name: Check if MariaDB server is installed
+  ansible.builtin.shell:
+    cmd: dpkg -l | grep mariadb-server
+
+- name: Create zabbix-mariadb_monitor.conf file in /etc/zabbix/zabbix_agent2.d
+  ansible.builtin.copy:
+    src: zabbix-mariadb-monitor.conf
+    dest: /etc/zabbix/zabbix_agent2.d/zabbix-mariadb_monitor.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart zabbix-agent2
+
+- name: Check zabbix DB user
+  ansible.builtin.shell:
+    cmd: mysql -u root -e "SELECT User, Host FROM mysql.user WHERE User = 'zbx_monitor';"|wc -l
+  register: zbx_monitor
+
+- name: Create zabbix DB user
+  ansible.builtin.shell:
+    cmd: mysql -u root -e "CREATE USER 'zbx_monitor'@'%' IDENTIFIED BY PASSWORD '*FCD975C7A34030F5BB2C5E84AA090B3EC54138E5'; GRANT PROCESS, SHOW DATABASES, BINLOG MONITOR, SHOW VIEW ON *.* TO 'zbx_monitor'@'%';" 
+  when: zbx_monitor.stdout != '2'
+
+- name: Make sure /var/lib/zabbix exists
+  ansible.builtin.file:
+    path: /var/lib/zabbix
+    state: directory
+    mode: '0755'
+    owner: zabbix
+    group: zabbix
+
+- name: stop zabbix-agent2
+  ansible.builtin.service:
+    name: zabbix-agent2
+    state: stopped
+
+- name: Make zabbix have homedir pointed to /var/lib/zabbix
+  ansible.builtin.user:
+    user: zabbix
+    home: /var/lib/zabbix
+
+- name: Copy over .my.cnf file to /var/lib/zabbix
+  ansible.builtin.copy:
+    src: .my.cnf
+    dest: /var/lib/zabbix/.my.cnf
+    mode: 0600
+    owner: zabbix
+    group: zabbix
+
+- name: Start zabbix-agent2
+  ansible.builtin.service:
+    name: zabbix-agent2
+    state: started
+

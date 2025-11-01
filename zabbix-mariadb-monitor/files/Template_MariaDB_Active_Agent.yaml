@@ -1,0 +1,183 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    - uuid: 1f1e9d7ce9fe4630800475651356682c
+      template: 'Template MariaDB Active Agent'
+      name: 'Template MariaDB Active Agent'
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: aa60d7b3939b4a7cbe6d7cf68fc1c3fa
+          name: 'MariaDB bytes received per second'
+          type: ZABBIX_ACTIVE
+          key: mariadb.bytes.received
+          history: 1w
+          value_type: FLOAT
+          units: Bps
+          description: |
+            The number of bytes received from all clients.
+            
+            It requires user parameter mysql.status[*], which is defined in
+            userparameter_mysql.conf.
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+          tags:
+            - tag: Application
+              value: MariaDB
+        - uuid: c7f391d34dfd44e08a5d3bc07c7deada
+          name: 'MariaDB bytes sent per second'
+          type: ZABBIX_ACTIVE
+          key: mariadb.bytes.sent
+          history: 1w
+          value_type: FLOAT
+          units: Bps
+          description: |
+            The number of bytes sent to all clients.
+            
+            It requires user parameter mysql.status[*], which is defined in userparameter_mysql.conf.
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+          tags:
+            - tag: Application
+              value: MariaDB
+        - uuid: 36cc72c7b4af4dbc9414e5f79dd4ab2b
+          name: 'MariaDB status'
+          type: ZABBIX_ACTIVE
+          key: mariadb.ping
+          history: 1w
+          description: |
+            It requires user parameter mysql.ping, which is defined in userparameter_mysql.conf.
+            
+            0 - MySQL server is down
+            1 - MySQL server is up
+          valuemap:
+            name: 'Service state'
+          tags:
+            - tag: Application
+              value: MariaDB
+          triggers:
+            - uuid: f2d1c1e2a953402abd0f9eacf8fd9aef
+              expression: 'last(/Template MariaDB Active Agent/mariadb.ping)=0'
+              name: 'MySQL is down'
+              priority: WARNING
+        - uuid: 13930b6b569e407a94f9cf77b37da1f0
+          name: 'MariaDB select operations per second'
+          type: ZABBIX_ACTIVE
+          key: mariadb.select.operations.per.second
+          history: 1w
+          value_type: FLOAT
+          units: qps
+          description: 'It requires user parameter mysql.status[*], which is defined in userparameter_mysql.conf.'
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+              parameters:
+                - ''
+          tags:
+            - tag: Application
+              value: MariaDB
+        - uuid: fb4f3b87991d490cb73f5abdccd9ff0d
+          name: 'MariaDB slow queries'
+          type: ZABBIX_ACTIVE
+          key: mariadb.slow.queries
+          history: 1w
+          description: 'It requires user parameter mysql.status[*], which is defined in userparameter_mysql.conf.'
+          tags:
+            - tag: Application
+              value: MariaDB
+        - uuid: 335135d43c194dcc80e2188444676bdf
+          name: 'MariaDB uptime'
+          type: ZABBIX_ACTIVE
+          key: mariadb.uptime
+          history: 1w
+          units: uptime
+          description: 'It requires user parameter mysql.status[*], which is defined in userparameter_mysql.conf.'
+          tags:
+            - tag: Application
+              value: MariaDB
+        - uuid: 3910ee73920c4c009378eea082bbc78d
+          name: 'MariaDB version'
+          type: ZABBIX_ACTIVE
+          key: mariadb.version
+          delay: 1h
+          history: 1w
+          value_type: CHAR
+          trends: '0'
+          description: 'It requires user parameter mysql.version, which is defined in userparameter_mysql.conf.'
+          tags:
+            - tag: Application
+              value: MariaDB
+      dashboards:
+        - uuid: 1f3e51065bb847b3b9dd1df815316eda
+          name: 'MySQL performance'
+          pages:
+            - widgets:
+                - type: graph
+                  width: '36'
+                  height: '7'
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Template MariaDB Active Agent'
+                        name: 'MySQL operations'
+                    - type: STRING
+                      name: reference
+                      value: AAAAK
+                    - type: INTEGER
+                      name: source_type
+                      value: '0'
+                - type: graph
+                  x: '36'
+                  width: '36'
+                  height: '7'
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Template MariaDB Active Agent'
+                        name: 'MySQL bandwidth'
+                    - type: STRING
+                      name: reference
+                      value: AAAAL
+                    - type: INTEGER
+                      name: source_type
+                      value: '0'
+      valuemaps:
+        - uuid: 14b75741686247c2bdcd5a70decc19a3
+          name: 'Service state'
+          mappings:
+            - value: '0'
+              newvalue: Down
+            - value: '1'
+              newvalue: Up
+  graphs:
+    - uuid: 40f6a63d532c4cb78049a44f83608add
+      name: 'MySQL bandwidth'
+      graph_items:
+        - drawtype: GRADIENT_LINE
+          color: 00AA00
+          item:
+            host: 'Template MariaDB Active Agent'
+            key: mariadb.bytes.received
+        - sortorder: '1'
+          drawtype: GRADIENT_LINE
+          color: 3333FF
+          item:
+            host: 'Template MariaDB Active Agent'
+            key: mariadb.bytes.sent
+    - uuid: 1461f176d6694eeaa9398af1b210f2e0
+      name: 'MySQL operations'
+      graph_items:
+        - sortorder: '5'
+          color: 00C800
+          item:
+            host: 'Template MariaDB Active Agent'
+            key: mariadb.select.operations.per.second
+
