@@ -20,7 +20,7 @@
     Pin-Priority: 1001' | sudo tee /etc/apt/preferences.d/salt-pin-1001
 - name: install salt-minion package
   ansible.builtin.apt:
-    name: salt-minion=3006.9
+    name: salt-minion
     state: present
     allow_downgrade: yes
     update_cache: yes

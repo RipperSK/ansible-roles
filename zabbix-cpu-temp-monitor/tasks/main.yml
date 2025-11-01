@@ -1,0 +1,43 @@
+---
+# roles/zabbix-cpu-temp/tasks/main.yml
+- name: Make sure that zabbix_agent2 package is installed
+  ansible.builtin.package:
+    name: zabbix-agent2
+    state: present
+
+- name: Make sure that lm-sensors package is installed
+  ansible.builtin.package:
+    name: lm-sensors
+    state: present
+
+- name: Make sure that bc package is installed
+  ansible.builtin.package:
+    name: bc
+    state: present
+
+- name: Copy user parameters file
+  ansible.builtin.copy:
+    src: cpu-temp-monitor.conf
+    dest: /etc/zabbix/zabbix_agent2.d/
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Copy script file
+  ansible.builtin.copy:
+    src: cpu-temp-monitor.sh
+    dest: /etc/zabbix/zabbix_agent2.d/
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: restart zabbix-agent2
+  ansible.builtin.service:
+    name: zabbix-agent2
+    state: restarted
+
+- name: Verify zabbix agent is running (optional, but recommended)
+  ansible.builtin.service:
+    name: zabbix-agent2
+    state: started
+    enabled: true
