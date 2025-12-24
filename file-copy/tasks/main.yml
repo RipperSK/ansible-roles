@@ -1,0 +1,16 @@
+---
+# tasks file for roles/file-copy
+- name: Fail if source and dest are not specified
+  ansible.builtin.fail:
+    msg: The system may not be provisioned according to the CMDB status.
+  when: 
+    - src is not defined
+    - dst is not defined
+
+- name: Copy requested file
+  ansible.builtin.copy:
+    src: "{{ src }}"
+    dest: "{{ dst }}"
+    owner: root
+    group: root
+    mode: '0744'

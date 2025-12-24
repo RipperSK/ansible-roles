@@ -1,0 +1,10 @@
+---
+# tasks file for roles/file-content
+- name: Insert/Update salt minion configuration for timeout and retries
+  ansible.builtin.blockinfile:
+    path: /etc/salt/minion
+    append_newline: true
+    prepend_newline: true
+    block: |
+      request_channel_timeout: 120
+      request_channel_tries: 5
