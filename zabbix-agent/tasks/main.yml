@@ -1,23 +1,33 @@
-- name: Fail if task is run on non-Debian12 system
-  ansible.builtin.fail:
-    msg: The supported OS for this role is Debian12 and Debian13 only
-  when: ansible_os_family != "Debian" or ansible_distribution_major_version < "12" or ansible_distribution_major_version > "13"
-
 - name: Install zabbix release repo for DEBIAN12
   apt:
     deb: "https://repo.zabbix.com/zabbix/7.0/debian/pool/main/z/zabbix-release/zabbix-release_latest%2Bdebian12_all.deb"
-  when: ansible_distribution_major_version == "12"
+  when: ansible_distribution_major_version == "12" and ansible_os_family == "Debian" 
 
 - name: Install zabbix release repo for DEBIAN13
   apt:
     deb: "https://repo.zabbix.com/zabbix/7.0/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.0%2Bdebian13_all.deb"
-  when: ansible_distribution_major_version == "13"
+  when: ansible_distribution_major_version == "13" and ansible_os_family == "Debian"
 
-- name: Install zabbix-agent package
+- name: Install zabbix release repo for ALMA LINUX 10
+  ansible.builtin.dnf:
+    name: "https://repo.zabbix.com/zabbix/7.0/alma/10/x86_64/zabbix-release-latest-7.0.el10.noarch.rpm"
+    state: present
+    disable_gpg_check: true
+  when: ansible_distribution_major_version == "10" and ansible_distribution == "AlmaLinux"
+
+- name: Install {{ pkg_name }} package on Debian
   apt:
     name: "{{ pkg_name }}"
     state: latest
     update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Install {{ pkg_name }} package on AlmaLinux
+  ansible.builtin.dnf:
+    name: "{{ pkg_name }}"
+    state: latest
+    update_cache: yes
+  when: ansible_distribution == "AlmaLinux"
 
 - name: Push zabbix PSK file
   copy:

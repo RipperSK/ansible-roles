@@ -1,0 +1,13 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for selinux-disable
+- name: Disable SELinux in runtime
+  ansible.posix.selinux:
+    state: disabled
+
+- name: Disable SELinux in /etc/selinux/config
+  ansible.builtin.lineinfile:
+    path: /etc/selinux/config
+    regex: ^SELINUX=
+    line: "SELINUX=disabled"
+    state: present

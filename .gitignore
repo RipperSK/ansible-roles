@@ -8,3 +8,4 @@ zabbix-mariadb-monitor/files/.my.cnf
 vsftpd
 elasticsearch
 ansible-role-docker
+ansible-role-swap

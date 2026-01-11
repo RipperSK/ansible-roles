@@ -2,6 +2,7 @@
   ansible.builtin.apt:
     update_cache: yes
   when: ansible_os_family == "Debian"
+
 - name: install generic packages
   package:
     name: "{{ item }}"
@@ -10,7 +11,6 @@
     - net-tools
     - cifs-utils
     - tmux
-    - screen
     - psmisc
     - strace
     - telnet
@@ -25,7 +25,9 @@
     - sudo
     - openssl
     - rsync
+    - vim
     - iotop
+
 - name: install packages for Debian
   package:
     name: "{{ item }}"
@@ -38,6 +40,7 @@
     - nload
     - nfs-common
   when: ansible_os_family == "Debian"
+
 - name: install packages for RHEL
   package:
     name: "{{ item }}"
