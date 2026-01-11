@@ -1,0 +1,4 @@
+#SPDX-License-Identifier: MIT-0
+---
+# var file for roles/swappiness
+vm_swappiness: 80

@@ -1,41 +1,63 @@
-- name: make sure /etc/apt/sources.list.d/salt.list is absent
-  file:
-    path: /etc/apt/sources.list.d/salt.list
-    state: absent
-- name: make sure /etc/apt/keyrings dir exists
-  file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: '755'
-- name: make sure salt repo key is present
-  shell:
-    cmd: curl -fsSL https://packages.broadcom.com/artifactory/api/security/keypair/SaltProjectKey/public | sudo tee /etc/apt/keyrings/salt-archive-keyring.pgp
-- name: create apt sources file
-  shell:
-    cmd: curl -fsSL https://github.com/saltstack/salt-install-guide/releases/latest/download/salt.sources | sudo tee /etc/apt/sources.list.d/salt.sources
-- name: create apt pin
-  shell: |
-    echo 'Package: salt-*
-    Pin: version 3006.*
-    Pin-Priority: 1001' | sudo tee /etc/apt/preferences.d/salt-pin-1001
+- name: prep tasks for Debian
+  when: ansible_os_family == "Debian"
+  block:
+  - name: make sure /etc/apt/sources.list.d/salt.list is absent
+    file:
+      path: /etc/apt/sources.list.d/salt.list
+      state: absent
+
+  - name: make sure /etc/apt/keyrings dir exists
+    file:
+      path: /etc/apt/keyrings
+      state: directory
+      mode: '755'
+
+  - name: make sure salt repo key is present
+    shell:
+      cmd: curl -fsSL https://packages.broadcom.com/artifactory/api/security/keypair/SaltProjectKey/public | sudo tee /etc/apt/keyrings/salt-archive-keyring.pgp
+
+  - name: create apt sources file
+    shell:
+      cmd: curl -fsSL https://github.com/saltstack/salt-install-guide/releases/latest/download/salt.sources | sudo tee /etc/apt/sources.list.d/salt.sources
+
+  - name: create apt pin
+    shell: |
+      echo 'Package: salt-*
+      Pin: version 3006.*
+      Pin-Priority: 1001' | sudo tee /etc/apt/preferences.d/salt-pin-1001
+
+- name: prep tasks for AlmaLinux
+  when: ansible_distribution == "AlmaLinux"
+  block:
+  - name: install repo file for AlmaLinux
+    shell:
+      cmd: curl -fsSL https://github.com/saltstack/salt-install-guide/releases/latest/download/salt.repo | sudo tee /etc/yum.repos.d/salt.repo
+
+  - name: clean repo and expire cache
+    shell:
+      cmd: dnf clean expire-cache
+
 - name: install salt-minion package
-  ansible.builtin.apt:
+  ansible.builtin.package:
     name: salt-minion
     state: present
-    allow_downgrade: yes
     update_cache: yes
+
 - name: create minion_id
   ansible.builtin.copy:
     content: "{{ ansible_hostname }}"
     dest: /etc/salt/minion_id
+
 - name: create minion.d/master
   ansible.builtin.copy:
     content: "{{ mastervar }}"
     dest: /etc/salt/minion.d/master.conf
+
 - name: enable salt-minion
   service: 
     name: salt-minion.service
     enabled: yes
+
 - name: restart salt-minion
   service:
     name: salt-minion.service

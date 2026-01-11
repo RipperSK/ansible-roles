@@ -1,0 +1,10 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for roles/swappiness
+- name: set sysctl
+  ansible.posix.sysctl:
+    name: vm.swappiness
+    value: "{{ vm_swappiness }}"
+    state: present
+    sysctl_set: true
+    reload: true
