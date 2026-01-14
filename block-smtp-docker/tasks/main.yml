@@ -1,0 +1,114 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks/main.yml - Block SMTP traffic from Docker containers
+# This role deploys and executes the SMTP blocking script
+
+- name: Ensure iptables is installed
+  ansible.builtin.apt:
+    name: iptables
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Ensure iptables is installed (RedHat)
+  ansible.builtin.yum:
+    name: iptables
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Create directory for SMTP blocking script
+  ansible.builtin.file:
+    path: /usr/local/sbin
+    state: directory
+    mode: '0755'
+
+- name: Copy SMTP blocking script to target
+  ansible.builtin.copy:
+    src: files/block-smtp-docker.sh
+    dest: /usr/local/sbin/block-smtp-docker.sh
+    owner: root
+    group: root
+    mode: '0755'
+  register: script_copied
+
+- name: Execute SMTP blocking script
+  ansible.builtin.command:
+    cmd: /usr/local/sbin/block-smtp-docker.sh install
+  register: script_execution
+  changed_when: "'successfully installed' in script_execution.stdout"
+
+- name: Display script execution output
+  ansible.builtin.debug:
+    var: script_execution.stdout_lines
+  when: script_execution.stdout_lines is defined
+
+- name: Ensure iptables rules directory exists
+  ansible.builtin.file:
+    path: /etc/iptables
+    state: directory
+    mode: '0755'
+
+- name: Install iptables-persistent for persistence (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name: iptables-persistent
+    state: present
+  when: ansible_os_family == "Debian"
+  register: iptables_persistent_installed
+
+- name: Save iptables rules with netfilter-persistent
+  ansible.builtin.command:
+    cmd: netfilter-persistent save
+  when:
+    - ansible_os_family == "Debian"
+    - iptables_persistent_installed is succeeded
+  changed_when: false
+
+- name: Create systemd service for SMTP blocking
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/block-smtp-docker.service
+    content: |
+      [Unit]
+      Description=Block SMTP traffic from Docker containers
+      After=docker.service
+      Requires=docker.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/block-smtp-docker.sh install
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+    owner: root
+    group: root
+    mode: '0644'
+  register: systemd_service
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  when: systemd_service is changed
+
+- name: Enable and start SMTP blocking service
+  ansible.builtin.systemd:
+    name: block-smtp-docker.service
+    enabled: yes
+    state: started
+  when: systemd_service is changed
+
+- name: Verify SMTP blocking rules are active
+  ansible.builtin.command:
+    cmd: iptables -L DOCKER-USER -n -v --line-numbers
+  register: iptables_check
+  changed_when: false
+
+- name: Check if port 25 is blocked in DOCKER-USER chain
+  ansible.builtin.assert:
+    that:
+      - "'dpt:25' in iptables_check.stdout"
+    fail_msg: "SMTP blocking rule not found in DOCKER-USER chain"
+    success_msg: "SMTP blocking is active and verified"
+
+- name: Display verification message
+  ansible.builtin.debug:
+    msg: "✓ SMTP traffic blocking is now active for Docker containers"
