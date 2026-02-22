@@ -1,0 +1,8 @@
+---
+- name: Create cron job to restart salt-minion daily at 4am
+  ansible.builtin.cron:
+    name: "Restart salt-minion"
+    minute: "0"
+    hour: "4"
+    job: "/bin/systemctl restart salt-minion >> /var/log/salt-minion-restart.log 2>&1"
+    state: present
