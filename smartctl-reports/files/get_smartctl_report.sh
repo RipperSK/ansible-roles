@@ -3,7 +3,7 @@ cd /root/smartctl_reports/ || exit 1
 report="./smartctl_report-$(date +%F).txt"
 
 hdd_attrs="Power_On_Hours|Reallocated_Sector_Ct|Temperature|Uncorrect|Power_Cycle_Count|Head_Health"
-nvme_attrs="Power_On_Hours|Available_Spare|Temperature|Unsafe_Shutdowns|Media_Errors"
+nvme_attrs="Power_On_Hours|Spare|Temperature|Unsafe_Shutdowns|Media_Errors"
 
 for d in /dev/sd? /dev/nvme?n1; do
   [ -e "$d" ] || continue
