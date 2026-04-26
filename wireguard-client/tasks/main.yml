@@ -1,0 +1,39 @@
+---
+- name: install wireguard
+  package:
+    name: wireguard
+    state: present
+
+- name: shell to generate keys
+  shell: wg genkey | tee /etc/wireguard/privatekey | wg pubkey | tee /etc/wireguard/publickey
+  register: pub_key
+
+- name: shell to get prv_key
+  shell: cat /etc/wireguard/privatekey
+  register: prv_key
+
+- name: push wg0 template
+  template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+
+- name: adjust permissions
+  file:
+    name: "{{ item }}"
+    owner: root
+    group: root
+    mode: 0600
+  loop:
+    - /etc/wireguard/privatekey
+    - /etc/wireguard/publickey
+    - /etc/wireguard/wg0.conf
+
+- name: enable wireguard
+  service:
+    name: wg-quick@wg0
+    enabled: yes
+
+- name: Make sure wireguard service is started
+  service:
+    name: wg-quick@wg0
+    state: started

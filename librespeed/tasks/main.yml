@@ -1,0 +1,78 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks/main.yml
+- name: Determine system architecture
+  set_fact:
+    librespeed_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' or ansible_architecture == 'arm64' else 'armv7' if ansible_architecture == 'armv7l' else ansible_architecture }}"
+
+- name: Get latest LibreSpeed CLI release info
+  uri:
+    url: https://api.github.com/repos/librespeed/speedtest-cli/releases/latest
+    return_content: yes
+  register: librespeed_release
+
+- name: Set LibreSpeed version
+  set_fact:
+    librespeed_version: "{{ librespeed_release.json.tag_name }}"
+
+- name: Determine OS type
+  set_fact:
+    librespeed_os: "{{ 'linux' if ansible_system == 'Linux' else 'darwin' if ansible_system == 'Darwin' else ansible_system | lower }}"
+
+- name: Set download URL
+  set_fact:
+    librespeed_url: "https://github.com/librespeed/speedtest-cli/releases/download/{{ librespeed_version }}/librespeed-cli_{{ librespeed_version | regex_replace('^v', '') }}_{{ librespeed_os }}_{{ librespeed_arch }}.tar.gz"
+
+- name: Create temporary directory
+  tempfile:
+    state: directory
+    suffix: librespeed
+  register: temp_dir
+
+- name: Download LibreSpeed CLI
+  get_url:
+    url: "{{ librespeed_url }}"
+    dest: "{{ temp_dir.path }}/librespeed-cli.tar.gz"
+    mode: '0644'
+
+- name: Extract LibreSpeed CLI
+  unarchive:
+    src: "{{ temp_dir.path }}/librespeed-cli.tar.gz"
+    dest: "{{ temp_dir.path }}"
+    remote_src: yes
+
+- name: Ensure /usr/local/bin exists
+  file:
+    path: /usr/local/bin
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: Install LibreSpeed CLI to /usr/local/bin
+  copy:
+    src: "{{ temp_dir.path }}/librespeed-cli"
+    dest: /usr/local/bin/librespeed-cli
+    mode: '0755'
+    remote_src: yes
+  become: yes
+
+- name: Create symbolic link for easier access
+  file:
+    src: /usr/local/bin/librespeed-cli
+    dest: /usr/local/bin/speedtest
+    state: link
+  become: yes
+
+- name: Clean up temporary directory
+  file:
+    path: "{{ temp_dir.path }}"
+    state: absent
+
+- name: Verify installation
+  command: librespeed-cli --version
+  register: version_check
+  changed_when: false
+
+- name: Display installation result
+  debug:
+    msg: "LibreSpeed CLI {{ librespeed_version }} installed successfully for {{ librespeed_os }}/{{ librespeed_arch }}"

@@ -1,0 +1,35 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for ./smartctl-reports
+- name: Make sure smartmontools is installed
+  ansible.builtin.package:
+    name: smartmontools
+    state: present
+
+- name: Create smartctl reports directory
+  ansible.builtin.file:
+    path: /root/smartctl_reports
+    state: directory
+    owner: root
+    group: root
+    mode: '0750'
+
+- name: Copy smartctl report script
+  ansible.builtin.copy:
+    src: get_smartctl_report.sh
+    dest: /root/smartctl_reports/get_smartctl_report.sh
+    owner: root
+    group: root
+    mode: '0750'
+
+- name: Create smartctl report cron job
+  ansible.builtin.cron:
+    name: "smartctl nightly report"
+    minute: "0"
+    hour: "23"
+    day: "*"
+    month: "*"
+    weekday: "*"
+    job: "/root/smartctl_reports/get_smartctl_report.sh"
+    user: root
+    state: present

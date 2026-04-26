@@ -1,0 +1,27 @@
+- name: Gather installed package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Fail if zabbix-agent2 is not installed
+  ansible.builtin.fail:
+    msg: "zabbix-agent2 is not installed"
+  when: "'zabbix-agent2' not in ansible_facts.packages"
+
+- name: Check if DebugLevel is already set
+  ansible.builtin.command: grep -qE '^DebugLevel=' /etc/zabbix/zabbix_agent2.conf
+  register: debuglevel_check
+  changed_when: false
+  failed_when: false
+
+- name: Set DebugLevel to 2 in zabbix-agent2 config file
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    regexp: '^# DebugLevel=3'
+    line: 'DebugLevel=2'
+  when: debuglevel_check.rc != 0
+
+- name: Restart zabbix-agent2 service
+  ansible.builtin.service:
+    name: zabbix-agent2
+    state: restarted
+  when: debuglevel_check.rc != 0

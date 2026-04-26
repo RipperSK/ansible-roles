@@ -1,0 +1,50 @@
+#SPDX-License-Identifier: MIT-0
+---
+- name: Install {{ pkg_name }} package
+  package:
+    name: "{{ pkg_name }}"
+    state: present
+
+- name: Install zabbix-sql-scripts package
+  package:
+    name: zabbix-sql-scripts
+    state: present
+
+- name: Install sqlite3
+  package:
+    name: sqlite3
+    state: present
+
+- name: Create /srv dir for sqlite DB
+  ansible.builtin.file:
+    path: /srv
+    state: directory
+    mode: '0755'
+    owner: zabbix
+    group: zabbix
+
+- name: Create sqlite DB
+  ansible.builtin.shell:
+    cmd: cat /usr/share/zabbix-sql-scripts/sqlite3/proxy.sql | sqlite3 /srv/zabbix.db && chown zabbix:zabbix /srv/zabbix.db || true
+
+- name: Push zabbix PSK file
+  copy:
+    src: zabbix_proxy.psk
+    dest: /etc/zabbix/zabbix_proxy.psk
+    owner: zabbix
+    group: zabbix
+    mode: '0600'
+
+- name: Push zabbix agent conf via template
+  template:
+    src: zabbix_proxy.conf.j2
+    dest: /etc/zabbix/zabbix_proxy.conf
+
+- name: Enable zabbix-proxy service
+  service:
+    name: zabbix-proxy
+    enabled: true
+- name: Restart zabbix-proxy service
+  service:
+    name: zabbix-proxy
+    state: restarted
