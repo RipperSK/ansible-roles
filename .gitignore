@@ -3,6 +3,7 @@ lae.proxmox
 user-ripper
 user-root
 zabbix-agent/files/zabbix_agent.psk
+zabbix-proxy/files/zabbix_proxy.psk
 zabbix-agent/templates/zabbix_agent2.conf.j2
 zabbix-mariadb-monitor/files/.my.cnf
 vsftpd
