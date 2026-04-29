@@ -6,6 +6,7 @@ zabbix-agent/files/zabbix_agent.psk
 zabbix-proxy/files/zabbix_proxy.psk
 zabbix-agent/templates/zabbix_agent2.conf.j2
 zabbix-mariadb-monitor/files/.my.cnf
+postfix_gmail/files
 vsftpd
 elasticsearch
 ansible-role-docker

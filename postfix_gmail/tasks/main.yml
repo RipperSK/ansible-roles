@@ -1,0 +1,51 @@
+# tasks file for postfix_gmail
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - postfix
+      - bsd-mailx
+      - libsasl2-modules
+    state: present
+    update_cache: yes
+
+- name: Deploy sasl_passwd credentials file
+  ansible.builtin.copy:
+    src: sasl_passwd
+    dest: /etc/postfix/sasl_passwd
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Run postmap
+  ansible.builtin.command:
+    cmd: postmap /etc/postfix/sasl_passwd
+
+- name: Configure postfix Gmail relay settings
+  ansible.builtin.command:
+    cmd: postconf -e "{{ item.key }}={{ item.value }}"
+  loop:
+    - { key: relayhost,                  value: "[smtp.gmail.com]:587" }
+    - { key: smtp_use_tls,               value: "yes" }
+    - { key: smtp_sasl_auth_enable,      value: "yes" }
+    - { key: smtp_sasl_password_maps,    value: "hash:/etc/postfix/sasl_passwd" }
+    - { key: smtp_sasl_security_options, value: "noanonymous" }
+    - { key: smtp_tls_CAfile,            value: "/etc/ssl/certs/ca-certificates.crt" }
+
+- name: Remove default_transport = error if present
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^\s*default_transport\s*=\s*error'
+    state: absent
+
+- name: Remove relay_transport = error if present
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^\s*relay_transport\s*=\s*error'
+    state: absent
+
+- name: Restart postfix
+  ansible.builtin.systemd:
+    name: postfix
+    enabled: yes
+    state: restarted

@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: MIT-0
+---
+- name: Prep tasks for Debian
+  when: ansible_os_family == "Debian"
+  block:
+    - name: Make sure /etc/apt/sources.list.d/salt.list is absent
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/salt.list
+        state: absent
+
+    - name: Make sure /etc/apt/keyrings dir exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '755'
+
+    - name: Make sure salt repo key is present
+      ansible.builtin.get_url:
+        url: https://packages.broadcom.com/artifactory/api/security/keypair/SaltProjectKey/public
+        dest: /etc/apt/keyrings/salt-archive-keyring.pgp
+        mode: '0644'
+
+    - name: Create apt sources file
+      ansible.builtin.get_url:
+        url: https://github.com/saltstack/salt-install-guide/releases/latest/download/salt.sources
+        dest: /etc/apt/sources.list.d/salt.sources
+        mode: '0644'
+
+    - name: Create apt pin
+      ansible.builtin.copy:
+        dest: /etc/apt/preferences.d/salt-pin-1001
+        mode: '0644'
+        content: |
+          Package: salt-*
+          Pin: version 3006.*
+          Pin-Priority: 1001
+
+- name: Prep tasks for AlmaLinux
+  when: ansible_distribution == "AlmaLinux"
+  block:
+    - name: Install repo file for AlmaLinux
+      ansible.builtin.get_url:
+        url: https://github.com/saltstack/salt-install-guide/releases/latest/download/salt.repo
+        dest: /etc/yum.repos.d/salt.repo
+        mode: '0644'
+
+    - name: Clean repo and expire cache
+      ansible.builtin.command:
+        cmd: dnf clean expire-cache
+      changed_when: false
+
+- name: Install salt-master package
+  ansible.builtin.package:
+    name: salt-master
+    state: present
+    update_cache: true
+
+- name: Ensure /etc/salt/pki/master dir exists
+  ansible.builtin.file:
+    path: /etc/salt/pki/master
+    state: directory
+    mode: '0700'
+    owner: root
+    group: root
+
+- name: Enable salt-master
+  ansible.builtin.service:
+    name: salt-master.service
+    enabled: true
+
+- name: Restart salt-master
+  ansible.builtin.service:
+    name: salt-master.service
+    state: restarted
