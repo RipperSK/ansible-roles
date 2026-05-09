@@ -1,0 +1,14 @@
+---
+- name: Create zabbix userparameter file
+  copy:
+    dest: /etc/zabbix/zabbix_agent2.d/userparameter_WAN.IP.address.conf
+    owner: zabbix
+    group: zabbix
+    mode: '0600'
+    content: |
+      UserParameter=WAN.IP.address,curl http://ipinfo.io/ip -s
+
+- name: Restart zabbix-agent2 service
+  service:
+    name: zabbix-agent2
+    state: restarted

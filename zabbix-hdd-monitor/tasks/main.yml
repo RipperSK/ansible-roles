@@ -1,0 +1,37 @@
+---
+- name: Make smartmontools is installed
+  package:
+    name: smartmontools
+    state: present
+
+- name: Make sure /usr/sbin/smartctl has correct attr
+  ansible.builtin.file:
+    path: /usr/sbin/smartctl
+    mode: '0754'
+    owner: root
+    group: disk
+
+- name: Set setuid bit on smartctl
+  ansible.builtin.file:
+    path: /usr/sbin/smartctl
+    mode: u+s
+
+- name: Make sure zabbix has disk group
+  user:
+    name: zabbix
+    groups: disk
+    append: yes
+
+- name: Push zabbix userparameter file
+  copy:
+    remote_src: no
+    src: userparameter_hdd_mon.conf
+    dest: /etc/zabbix/zabbix_agent2.d/
+    owner: zabbix
+    group: zabbix
+    mode: '0600'
+
+- name: Restart zabbix-agent service
+  service:
+    name: zabbix-agent2
+    state: restarted
