@@ -72,3 +72,12 @@
   ansible.builtin.service:
     name: salt-master.service
     state: restarted
+
+- name: Create cron job to restart salt-master daily at 2am
+  ansible.builtin.cron:
+    name: "Restart salt-master"
+    minute: "0"
+    hour: "4"
+    job: "/bin/systemctl restart salt-master >> /var/log/salt-master-restart.log 2>&1"
+    state: present
+      
