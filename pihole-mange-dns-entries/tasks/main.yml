@@ -1,0 +1,39 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for pihole-mange-dns-entries
+
+- name: Install validtoml
+  ansible.builtin.copy:
+    src: validtoml
+    dest: /usr/local/bin/validtoml
+    owner: pihole
+    group: pihole
+    mode: "0755"
+
+- name: Deploy pihole.toml to /tmp
+  ansible.builtin.copy:
+    src: pihole.toml
+    dest: /tmp/pihole.toml
+    owner: pihole
+    group: pihole
+    mode: "0640"
+
+- name: Validate toml
+  ansible.builtin.command:
+    cmd: validtoml /tmp/pihole.toml
+  run_once: true
+  changed_when: false    
+
+- name: Deploy pihole.toml to /etc/pihole
+  ansible.builtin.copy:
+    src: pihole.toml
+    dest: /etc/pihole/pihole.toml
+    owner: pihole
+    group: pihole
+    mode: "0640"
+    backup: yes
+
+- name: Restart pihole-FTL service
+  ansible.builtin.service:
+    name: pihole-FTL
+    state: restarted
